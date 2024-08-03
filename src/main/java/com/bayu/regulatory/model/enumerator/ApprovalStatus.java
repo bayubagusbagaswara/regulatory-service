@@ -1,4 +1,4 @@
-package com.bayu.regulatory.model.approval;
+package com.bayu.regulatory.model.enumerator;
 
 public enum ApprovalStatus {
 
