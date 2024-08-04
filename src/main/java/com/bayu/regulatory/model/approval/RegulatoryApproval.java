@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @MappedSuperclass
@@ -25,5 +26,22 @@ public class RegulatoryApproval implements Serializable {
     @Column(name = "approval_status")
     private ApprovalStatus approvalStatus;
 
+    @Column(name = "input_id")
+    private String inputId;
+
+    @Column(name = "input_date")
+    private LocalDateTime inputDate;
+
+    @Column(name = "input_ip_address")
+    private String inputIPAddress;
+
+    @Column(name = "approve_id")
+    private String approveId;
+
+    @Column(name = "approve_date")
+    private LocalDateTime approveDate;
+
+    @Column(name = "approve_ip_address")
+    private String approveIPAddress;
 
 }
