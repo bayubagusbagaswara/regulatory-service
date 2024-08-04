@@ -1,6 +1,6 @@
 package com.bayu.regulatory.util;
 
-import com.bayu.regulatory.dto.ContextDate;
+import com.bayu.regulatory.dto.ContextDateDTO;
 import com.bayu.regulatory.exception.ContextDateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,7 +72,7 @@ public class DateUtil {
         return monthYear;
     }
 
-    public ContextDate buildContextDate(Instant instantNow) {
+    public ContextDateDTO buildContextDate(Instant instantNow) {
         try {
             /* get Month Minus 1 */
             Map<String, String> monthMinus1 = getMonthMinus1(instantNow);
@@ -86,7 +86,7 @@ public class DateUtil {
             String monthNameNowValue = monthNow.get("monthValue");
             Integer yearNow = Integer.parseInt(monthNow.get("year"));
 
-            return ContextDate.builder()
+            return ContextDateDTO.builder()
                     .instantNow(instantNow)
                     .monthNameMinus1(monthNameMinus1)
                     .monthNameMinus1Value(monthNameMinus1Value)

@@ -11,7 +11,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContextDate {
+public class ContextDateDTO {
 
     private Instant instantNow;
 
