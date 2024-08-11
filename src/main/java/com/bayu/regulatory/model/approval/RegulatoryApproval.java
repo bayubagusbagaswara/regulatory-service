@@ -26,6 +26,15 @@ public class RegulatoryApproval implements Serializable {
     @Column(name = "approval_status")
     private ApprovalStatus approvalStatus;
 
+    @Column(name = "approve_id")
+    private String approveId;
+
+    @Column(name = "approve_date")
+    private LocalDateTime approveDate;
+
+    @Column(name = "approve_ip_address")
+    private String approveIPAddress;
+
     @Column(name = "input_id")
     private String inputId;
 
@@ -35,13 +44,5 @@ public class RegulatoryApproval implements Serializable {
     @Column(name = "input_ip_address")
     private String inputIPAddress;
 
-    @Column(name = "approve_id")
-    private String approveId;
-
-    @Column(name = "approve_date")
-    private LocalDateTime approveDate;
-
-    @Column(name = "approve_ip_address")
-    private String approveIPAddress;
 
 }
