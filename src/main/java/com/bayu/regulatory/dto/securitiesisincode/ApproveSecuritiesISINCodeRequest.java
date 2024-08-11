@@ -10,6 +10,6 @@ import lombok.*;
 @AllArgsConstructor
 public class ApproveSecuritiesISINCodeRequest extends ApprovalIdentifierRequest {
 
-    private String dataChangeId;
+    private Long dataChangeId;
 
 }
