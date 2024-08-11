@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.bayu.regulatory.model.enumerator.ApprovalStatus.*;
 import static com.bayu.regulatory.model.enumerator.ChangeAction.*;
@@ -55,20 +56,26 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     }
 
     @Override
-    public void setApprovalStatusIsRejected(RegulatoryDataChangeDTO dataChangeDTO, List<String> errorMessageList) {
+    public synchronized void setApprovalStatusIsRejected(RegulatoryDataChange dataChange, List<String> errorMessageList) {
         log.info("Start set approval status is Rejected");
-        RegulatoryDataChange regulatoryDataChange = getById(dataChangeDTO.getId());
+        RegulatoryDataChange regulatoryDataChange = getById(dataChange.getId());
 
         regulatoryDataChange.setApprovalStatus(REJECTED);
 
-        regulatoryDataChange.setApproveId(dataChangeDTO.getApproveId());
-        regulatoryDataChange.setApproveIPAddress(dataChangeDTO.getApproveIPAddress());
-        regulatoryDataChange.setApproveDate(dataChangeDTO.getApproveDate() == null ? LocalDateTime.now() : dataChangeDTO.getApproveDate());
-
-        regulatoryDataChange.setJsonDataAfter(dataChangeDTO.getJsonDataAfter() == null ? "" : dataChangeDTO.getJsonDataAfter());
-        regulatoryDataChange.setJsonDataBefore(dataChangeDTO.getJsonDataBefore() == null ? "" : dataChangeDTO.getJsonDataBefore());
-
-        regulatoryDataChange.setEntityId(dataChangeDTO.getEntityId() == null ? "" : dataChangeDTO.getEntityId());
+        regulatoryDataChange.setApproveId(dataChange.getApproveId());
+        regulatoryDataChange.setApproveIPAddress(dataChange.getApproveIPAddress());
+        regulatoryDataChange.setApproveDate(
+                Optional.ofNullable(dataChange.getApproveDate()).orElse(LocalDateTime.now())
+        );
+        regulatoryDataChange.setJsonDataAfter(
+                Optional.ofNullable(dataChange.getJsonDataAfter()).orElse("")
+        );
+        regulatoryDataChange.setJsonDataBefore(
+                Optional.ofNullable(dataChange.getJsonDataBefore()).orElse("")
+        );
+        regulatoryDataChange.setEntityId(
+                Optional.ofNullable(dataChange.getEntityId()).orElse("")
+        );
         regulatoryDataChange.setDescription(StringUtil.joinStrings(errorMessageList));
 
         RegulatoryDataChange save = regulatoryDataChangeRepository.save(regulatoryDataChange);
@@ -77,111 +84,64 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     }
 
     @Override
-    public void setApprovalStatusIsApproved(RegulatoryDataChangeDTO dataChangeDTO) {
+    public void setApprovalStatusIsApproved(RegulatoryDataChange dataChange) {
         log.info("Start set approval status is Approved");
-        RegulatoryDataChange regulatoryDataChange = getById(dataChangeDTO.getId());
+        RegulatoryDataChange regulatoryDataChange = getById(dataChange.getId());
 
         regulatoryDataChange.setApprovalStatus(APPROVED);
 
-        regulatoryDataChange.setApproveId(dataChangeDTO.getApproveId());
-        regulatoryDataChange.setApproveIPAddress(dataChangeDTO.getApproveIPAddress());
-        regulatoryDataChange.setApproveDate(dataChangeDTO.getApproveDate() == null ? LocalDateTime.now() : dataChangeDTO.getApproveDate());
-
-        regulatoryDataChange.setJsonDataAfter(dataChangeDTO.getJsonDataAfter() == null ? "" : dataChangeDTO.getJsonDataAfter());
-        regulatoryDataChange.setJsonDataBefore(dataChangeDTO.getJsonDataBefore() == null ? "" : dataChangeDTO.getJsonDataBefore());
-
-        regulatoryDataChange.setEntityId(dataChangeDTO.getEntityId());
-        regulatoryDataChange.setDescription(dataChangeDTO.getDescription());
+        regulatoryDataChange.setApproveId(dataChange.getApproveId());
+        regulatoryDataChange.setApproveIPAddress(dataChange.getApproveIPAddress());
+        regulatoryDataChange.setApproveDate(
+                Optional.ofNullable(dataChange.getApproveDate()).orElse(LocalDateTime.now())
+        );
+        regulatoryDataChange.setJsonDataAfter(
+                Optional.ofNullable(dataChange.getJsonDataAfter()).orElse("")
+        );
+        regulatoryDataChange.setJsonDataBefore(
+                Optional.ofNullable(dataChange.getJsonDataBefore()).orElse("")
+        );
+        regulatoryDataChange.setEntityId(dataChange.getEntityId());
+        regulatoryDataChange.setDescription(dataChange.getDescription());
 
         RegulatoryDataChange save = regulatoryDataChangeRepository.save(regulatoryDataChange);
         log.info("Successfully set approval status Approved with id: {}", save.getId());
     }
 
     @Override
-    public <T> void createChangeActionAdd(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz) {
-        RegulatoryDataChange regulatoryDataChange = RegulatoryDataChange.builder()
-                .approvalStatus(ApprovalStatus.PENDING)
-                .inputId(dataChangeDTO.getInputId())
-                .inputDate(LocalDateTime.now())
-                .inputIPAddress(dataChangeDTO.getInputIPAddress())
+    public <T> void createChangeActionAdd(RegulatoryDataChange dataChange, Class<T> clazz) {
+        dataChange.setAction(ADD);
+        dataChange.setEntityId("");
+        dataChange.setEntityClassName(clazz.getName());
+        dataChange.setTableName(TableNameResolver.getTableName(clazz));
+        dataChange.setJsonDataBefore("");
+        dataChange.setDescription("");
 
-                .action(ADD)
-                .entityId("")
-                .entityClassName(clazz.getName())
-                .tableName(TableNameResolver.getTableName(clazz))
-
-                .jsonDataBefore("")
-                .jsonDataAfter(dataChangeDTO.getJsonDataAfter())
-                .description("")
-
-                .methodHttp(dataChangeDTO.getMethodHttp())
-                .endpoint(dataChangeDTO.getEndpoint())
-                .isRequestBody(dataChangeDTO.isRequestBody())
-                .isRequestParam(dataChangeDTO.isRequestParam())
-                .isPathVariable(dataChangeDTO.isPathVariable())
-                .menu(dataChangeDTO.getMenu())
-                .build();
-
-        RegulatoryDataChange save = regulatoryDataChangeRepository.save(regulatoryDataChange);
+        RegulatoryDataChange save = regulatoryDataChangeRepository.save(dataChange);
         log.info("Successfully save create change action Add with id: {}", save.getId());
     }
 
     @Override
-    public <T> void createChangeActionEdit(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz) {
-        RegulatoryDataChange regulatoryDataChange = RegulatoryDataChange.builder()
-                .approvalStatus(PENDING)
+    public <T> void createChangeActionEdit(RegulatoryDataChange dataChange, Class<T> clazz) {
+        log.info("Start create change action Edit: {}", dataChange);
+        dataChange.setAction(EDIT);
+        dataChange.setEntityClassName(clazz.getName());
+        dataChange.setTableName(TableNameResolver.getTableName(clazz));
+        dataChange.setDescription("");
 
-                .inputId(dataChangeDTO.getInputId())
-                .inputDate(LocalDateTime.now())
-                .inputIPAddress(dataChangeDTO.getInputIPAddress())
-
-                .action(EDIT)
-                .entityId(dataChangeDTO.getEntityId())
-                .entityClassName(clazz.getName())
-                .tableName(TableNameResolver.getTableName(clazz))
-
-                .jsonDataBefore(dataChangeDTO.getJsonDataBefore())
-                .jsonDataAfter(dataChangeDTO.getJsonDataAfter())
-                .description("")
-
-                .methodHttp(dataChangeDTO.getMethodHttp())
-                .endpoint(dataChangeDTO.getEndpoint())
-                .isRequestBody(dataChangeDTO.isRequestBody())
-                .isRequestParam(dataChangeDTO.isRequestParam())
-                .isPathVariable(dataChangeDTO.isPathVariable())
-                .menu(dataChangeDTO.getMenu())
-                .build();
-        RegulatoryDataChange save = regulatoryDataChangeRepository.save(regulatoryDataChange);
+        RegulatoryDataChange save = regulatoryDataChangeRepository.save(dataChange);
         log.info("Successfully save create change action Edit with id: {}", save.getId());
     }
 
     @Override
-    public <T> void createChangeActionDelete(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz) {
-        RegulatoryDataChange regulatoryDataChange = RegulatoryDataChange.builder()
-                .approvalStatus(PENDING)
+    public <T> void createChangeActionDelete(RegulatoryDataChange dataChange, Class<T> clazz) {
+        log.info("Start create change action Delete: {}", dataChange);
+        dataChange.setAction(DELETE);
+        dataChange.setEntityClassName(clazz.getName());
+        dataChange.setTableName(TableNameResolver.getTableName(clazz));
+        dataChange.setDescription("");
 
-                .inputId(dataChangeDTO.getInputId())
-                .inputDate(LocalDateTime.now())
-                .inputIPAddress(dataChangeDTO.getInputIPAddress())
-
-                .action(DELETE)
-                .entityId(dataChangeDTO.getEntityId())
-                .entityClassName(clazz.getName())
-                .tableName(TableNameResolver.getTableName(clazz))
-
-                .jsonDataBefore(dataChangeDTO.getJsonDataBefore())
-                .jsonDataAfter(dataChangeDTO.getJsonDataAfter())
-                .description("")
-
-                .methodHttp(dataChangeDTO.getMethodHttp())
-                .endpoint(dataChangeDTO.getEndpoint())
-                .isRequestBody(dataChangeDTO.isRequestBody())
-                .isRequestParam(dataChangeDTO.isRequestParam())
-                .isPathVariable(dataChangeDTO.isPathVariable())
-                .methodHttp(dataChangeDTO.getMenu())
-                .build();
-
-        RegulatoryDataChange save = regulatoryDataChangeRepository.save(regulatoryDataChange);
+        RegulatoryDataChange save = regulatoryDataChangeRepository.save(dataChange);
         log.info("Successfully save create change action Delete with id: {}", save.getId());
     }
 

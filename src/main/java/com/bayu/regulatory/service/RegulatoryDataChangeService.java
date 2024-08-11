@@ -16,15 +16,15 @@ public interface RegulatoryDataChangeService {
 
     String deleteAll();
 
-    void setApprovalStatusIsRejected(RegulatoryDataChangeDTO dataChangeDTO, List<String> errorMessageList);
+    void setApprovalStatusIsRejected(RegulatoryDataChange dataChange, List<String> errorMessageList);
 
-    void setApprovalStatusIsApproved(RegulatoryDataChangeDTO dataChangeDTO);
+    void setApprovalStatusIsApproved(RegulatoryDataChange dataChange);
 
-    <T> void createChangeActionAdd(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz);
+    <T> void createChangeActionAdd(RegulatoryDataChange dataChange, Class<T> clazz);
 
-    <T> void createChangeActionEdit(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz);
+    <T> void createChangeActionEdit(RegulatoryDataChange dataChange, Class<T> clazz);
 
-    <T> void createChangeActionDelete(RegulatoryDataChangeDTO dataChangeDTO, Class<T> clazz);
+    <T> void createChangeActionDelete(RegulatoryDataChange dataChange, Class<T> clazz);
 
     Boolean existByIdListAndStatus(List<Long> idList, Long idListSize, ApprovalStatus approvalStatus);
 
