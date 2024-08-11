@@ -2,6 +2,7 @@ package com.bayu.regulatory.mapper;
 
 import com.bayu.regulatory.dto.exchangerate.CreateExchangeRateRequest;
 import com.bayu.regulatory.dto.exchangerate.ExchangeRateDTO;
+import com.bayu.regulatory.dto.exchangerate.UpdateExchangeRateRequest;
 import com.bayu.regulatory.model.ExchangeRate;
 import com.bayu.regulatory.util.ConversionUtil;
 import org.mapstruct.Mapper;
@@ -40,5 +41,16 @@ public interface ExchangeRateMapper {
         return null == value ? "" : value;
     }
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "currencyCode", target = "code")
+    @Mapping(source = "currencyName", target = "name")
+    @Mapping(source = "rate", target = "rate", qualifiedByName = "stringToBigDecimal")
+    ExchangeRate toModel(ExchangeRateDTO exchangeRateDTO);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "currencyCode", target = "currencyCode", qualifiedByName = "nullToEmpty")
+    @Mapping(source = "currencyName", target = "currencyName", qualifiedByName = "nullToEmpty")
+    @Mapping(source = "rate", target = "rate", qualifiedByName = "nullToEmpty")
+    ExchangeRateDTO fromUpdateRequestToDTO(UpdateExchangeRateRequest updateExchangeRateRequest);
 
 }
