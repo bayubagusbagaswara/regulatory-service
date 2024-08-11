@@ -187,9 +187,10 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
 
     @Override
     public Boolean existByIdListAndStatus(List<Long> idList, Long idListSize, ApprovalStatus approvalStatus) {
-        Boolean existsByIdListAndStatus = regulatoryDataChangeRepository.existsByIdListAndStatus(idList, idListSize, approvalStatus);
-        log.info("Status exist by id list: {}", existsByIdListAndStatus);
-        return existsByIdListAndStatus;
+//        Boolean existsByIdListAndStatus = regulatoryDataChangeRepository.existsByIdListAndStatus(idList, idListSize, approvalStatus);
+//        log.info("Status exist by id list: {}", existsByIdListAndStatus);
+//        return existsByIdListAndStatus;
+        return false;
     }
 
     @Override
