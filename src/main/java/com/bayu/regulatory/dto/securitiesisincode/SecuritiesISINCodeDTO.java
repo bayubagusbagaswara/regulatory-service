@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SecuritiesISINCodeDTO {
 
-    private String exernalCode;
+    private String externalCode;
 
     private String currency;
 

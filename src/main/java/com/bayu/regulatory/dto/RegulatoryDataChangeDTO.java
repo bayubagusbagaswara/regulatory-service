@@ -45,15 +45,15 @@ public class RegulatoryDataChangeDTO {
 
     private String endpoint;
 
-    private boolean isRequestBody;
+    private Boolean isRequestBody;
 
-    private boolean isRequestParam;
+    private Boolean isRequestParam;
 
-    private boolean isPathVariable;
+    private Boolean isPathVariable;
 
     private String menu;
 
-    public RegulatoryDataChangeDTO(String inputIPAddress, String methodHttp, String endpoint, boolean isRequestBody, boolean isRequestParam, boolean isPathVariable, String menu) {
+    public RegulatoryDataChangeDTO(String inputIPAddress, String methodHttp, String endpoint, Boolean isRequestBody, Boolean isRequestParam, Boolean isPathVariable, String menu) {
         this.inputIPAddress = inputIPAddress;
         this.methodHttp = methodHttp;
         this.endpoint = endpoint;
