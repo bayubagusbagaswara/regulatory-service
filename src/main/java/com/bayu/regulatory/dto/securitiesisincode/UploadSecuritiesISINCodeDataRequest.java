@@ -17,13 +17,14 @@ public class UploadSecuritiesISINCodeDataRequest {
     @JsonProperty(value = "External Code 2")
     private String externalCode2;
 
+    @NotBlank(message = "Currency must not be blank")
     @JsonProperty(value = "Currency")
     private String currency;
 
-    @JsonProperty(value = "Issuer LBABK")
-    private String issuerLBABK;
+    @JsonProperty(value = "ISIN LKPBU")
+    private String isinLKPBU;
 
-    @JsonProperty(value = "Issuer LKPBU")
-    private String issuerLKPBU;
+    @JsonProperty(value = "ISIN LBABK")
+    private String isinLBABK;
 
 }
