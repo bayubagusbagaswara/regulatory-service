@@ -14,6 +14,27 @@ public class JsonUtil {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    public static String cleanedEntityDataFromApprovalData(String jsonDataFull) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(jsonDataFull);
+
+        ((ObjectNode) jsonNode).remove("approvalStatus");
+        ((ObjectNode) jsonNode).remove("approveId");
+        ((ObjectNode) jsonNode).remove("approveDate");
+        ((ObjectNode) jsonNode).remove("approveIPAddress");
+        ((ObjectNode) jsonNode).remove("inputId");
+        ((ObjectNode) jsonNode).remove("inputDate");
+        ((ObjectNode) jsonNode).remove("inputIPAddress");
+
+        return objectMapper.writeValueAsString(jsonNode);
+    }
+
+    public static String cleanedId(String jsonDataFull) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(jsonDataFull);
+
+        ((ObjectNode) jsonNode).remove("id");
+        return objectMapper.writeValueAsString(jsonNode);
+    }
+
     public static String cleanedJsonData(String jsonDataFull) throws JsonProcessingException {
         JsonNode jsonNode = objectMapper.readTree(jsonDataFull);
 
@@ -47,5 +68,6 @@ public class JsonUtil {
         // Remove properties with empty string values
         return jsonNode.fields();
     }
+
 
 }
