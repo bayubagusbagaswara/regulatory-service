@@ -14,4 +14,5 @@ public interface SecuritiesISINCodeRepository extends JpaRepository<SecuritiesIS
     @Query(value = "FROM SecuritiesISINCode s WHERE s.externalCode2 = :externalCode")
     Optional<SecuritiesISINCode> findByExternalCode(@Param("externalCode") String externalCode);
 
+    boolean existsByExternalCode2(String externalCode);
 }
