@@ -7,9 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Disini ada JsonProperty
- */
 @Data
 @Builder
 @NoArgsConstructor
