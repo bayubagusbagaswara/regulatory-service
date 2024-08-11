@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InputIdentifierRequest {
 
-    private String inputerId;
+    private String inputId;
 
 }
