@@ -3,6 +3,7 @@ package com.bayu.regulatory.model;
 import com.bayu.regulatory.model.approval.RegulatoryApproval;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "reg_exchange_rate")
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExchangeRate extends RegulatoryApproval {
