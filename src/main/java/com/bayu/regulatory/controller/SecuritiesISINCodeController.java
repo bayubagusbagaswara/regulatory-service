@@ -39,7 +39,7 @@ public class SecuritiesISINCodeController {
                 .isRequestBody(true)
                 .isRequestParam(false)
                 .isPathVariable(false)
-                .methodHttp(MENU_ISIN_CODE)
+                .menu(MENU_ISIN_CODE)
                 .build();
         SecuritiesISINCodeResponse listData = securitiesIsinCodeService.uploadData(uploadSecuritiesIssuerCodeListRequest, regulatoryDataChangeDTO);
         ResponseDto<SecuritiesISINCodeResponse> response = ResponseDto.<SecuritiesISINCodeResponse>builder()
