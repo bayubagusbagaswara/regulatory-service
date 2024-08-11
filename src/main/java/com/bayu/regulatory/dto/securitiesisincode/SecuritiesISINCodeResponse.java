@@ -1,6 +1,6 @@
 package com.bayu.regulatory.dto.securitiesisincode;
 
-import com.services.hiportservices.dto.regulatory.ErrorMessageDTO;
+import com.bayu.regulatory.dto.ErrorMessageDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
