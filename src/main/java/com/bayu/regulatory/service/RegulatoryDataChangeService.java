@@ -10,7 +10,7 @@ public interface RegulatoryDataChangeService {
 
     RegulatoryDataChange getById(Long id);
 
-    List<RegulatoryDataChange> getAll();
+    List<RegulatoryDataChangeDTO> getAll();
 
     List<String> findAllMenu();
 
