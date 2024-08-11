@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface SecuritiesISINCodeService {
 
+    boolean isExternalCodeAlreadyExists(String externalCode);
+
     SecuritiesISINCodeResponse uploadData(UploadSecuritiesISINCodeListRequest uploadSecuritiesIssuerCodeListRequest, RegulatoryDataChangeDTO regulatoryDataChangeDTO);
 
     SecuritiesISINCodeResponse createApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress);
