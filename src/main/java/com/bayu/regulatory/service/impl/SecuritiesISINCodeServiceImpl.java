@@ -33,6 +33,7 @@ import static com.bayu.regulatory.model.enumerator.ApprovalStatus.APPROVED;
 @RequiredArgsConstructor
 public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService {
 
+    private static final String ID_NOT_FOUND = "Securities ISIN Code not found with id: ";
     private static final String UNKNOWN_EXTERNAL_CODE = "Unknown External Code";
 
     private final SecuritiesISINCodeRepository securitiesISINCodeRepository;
@@ -42,6 +43,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
     private final RegulatoryDataChangeMapper dataChangeMapper;
     private final SecuritiesISINCodeMapper securitiesISINCodeMapper;
 
+    @Override
     public boolean isExternalCodeAlreadyExists(String externalCode) {
         return securitiesISINCodeRepository.existsByExternalCode2(externalCode);
     }
@@ -49,7 +51,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
     @Transactional
     @Override
     public synchronized SecuritiesISINCodeResponse uploadData(UploadSecuritiesISINCodeListRequest uploadSecuritiesIssuerCodeListRequest, RegulatoryDataChangeDTO regulatoryDataChangeDTO) {
-        log.info("Start upload data securities isin code: {}, {}", uploadSecuritiesIssuerCodeListRequest, regulatoryDataChangeDTO);
+        log.info("Start upload data securities ISIN code: {}, {}", uploadSecuritiesIssuerCodeListRequest, regulatoryDataChangeDTO);
         String inputId = uploadSecuritiesIssuerCodeListRequest.getInputId();
         regulatoryDataChangeDTO.setInputId(inputId);
         int totalDataSuccess = 0;
@@ -92,8 +94,9 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
+    @Transactional
     @Override
-    public SecuritiesISINCodeResponse createApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
+    public synchronized SecuritiesISINCodeResponse createApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
         log.info("Start create approve Securities ISIN Code: {}, {}", approveSecuritiesISINCodeRequest, approveIPAddress);
         String approveId = approveSecuritiesISINCodeRequest.getApproveId();
         int totalDataSuccess = 0;
@@ -149,8 +152,9 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
+    @Transactional
     @Override
-    public SecuritiesISINCodeResponse updateApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
+    public synchronized SecuritiesISINCodeResponse updateApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
         log.info("Start update approve Securities ISIN Code: {}, {}", approveSecuritiesISINCodeRequest, approveIPAddress);
         String approveId = approveSecuritiesISINCodeRequest.getApproveId();
         int totalDataSuccess = 0;
@@ -165,7 +169,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
             log.info("Update Approve: {}", securitiesISINCodeDTO);
 
             SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(Long.valueOf(dataChange.getEntityId()))
-                    .orElseThrow(() -> new DataNotFoundException("Securities ISIN Code not found with id: " + dataChange.getEntityId()));
+                    .orElseThrow(() -> new DataNotFoundException(ID_NOT_FOUND + dataChange.getEntityId()));
 
             // do update
             LocalDateTime approveDate = LocalDateTime.now();
@@ -210,8 +214,9 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
+    @Transactional
     @Override
-    public SecuritiesISINCodeResponse deleteById(DeleteSecuritiesISINCodeRequest deleteSecuritiesISINCodeRequest, RegulatoryDataChangeDTO regulatoryDataChangeDTO) {
+    public synchronized SecuritiesISINCodeResponse deleteById(DeleteSecuritiesISINCodeRequest deleteSecuritiesISINCodeRequest, RegulatoryDataChangeDTO regulatoryDataChangeDTO) {
         log.info("Start delete Securities ISIN Code by id: {}, {}", deleteSecuritiesISINCodeRequest, regulatoryDataChangeDTO);
         regulatoryDataChangeDTO.setInputId(deleteSecuritiesISINCodeRequest.getInputId());
         int totalDataSuccess = 0;
@@ -222,7 +227,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
 
         try {
             SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(deleteSecuritiesISINCodeRequest.getId())
-                    .orElseThrow(() -> new DataNotFoundException("Securities ISIN Code not found with id: " + deleteSecuritiesISINCodeRequest.getInputId()));
+                    .orElseThrow(() -> new DataNotFoundException(ID_NOT_FOUND + deleteSecuritiesISINCodeRequest.getInputId()));
 
             securitiesISINCodeDTO = securitiesISINCodeMapper.toDTO(securitiesISINCode);
 
@@ -243,9 +248,39 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
+    @Transactional
     @Override
-    public SecuritiesISINCodeResponse deleteApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
-        return null;
+    public synchronized SecuritiesISINCodeResponse deleteApprove(ApproveSecuritiesISINCodeRequest approveSecuritiesISINCodeRequest, String approveIPAddress) {
+        log.info("Delete approve Securities ISIN Code: {}, {}", approveSecuritiesISINCodeRequest, approveIPAddress);
+        String approveId = approveSecuritiesISINCodeRequest.getApproveId();
+        int totalDataSuccess = 0;
+        int totalDataFailed = 0;
+        List<ErrorMessageDTO> errorMessageDTOList = new ArrayList<>();
+        List<String> validationErrors = new ArrayList<>();
+        SecuritiesISINCodeDTO securitiesISINCodeDTO = null;
+
+        try {
+            RegulatoryDataChange dataChange = regulatoryDataChangeService.getById(approveSecuritiesISINCodeRequest.getDataChangeId());
+
+            SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(Long.valueOf(dataChange.getEntityId()))
+                    .orElseThrow(() -> new DataNotFoundException(ID_NOT_FOUND + dataChange.getEntityId()));
+
+            securitiesISINCodeDTO = securitiesISINCodeMapper.toDTO(securitiesISINCode);
+
+            dataChange.setApproveId(approveId);
+            dataChange.setApproveIPAddress(approveIPAddress);
+            dataChange.setDescription("Success delete approve with id: " + securitiesISINCode.getId());
+
+            regulatoryDataChangeService.setApprovalStatusIsApproved(dataChange);
+
+            /* delete entity */
+            securitiesISINCodeRepository.delete(securitiesISINCode);
+            totalDataSuccess++;
+        } catch (Exception e) {
+            handleGeneralError(securitiesISINCodeDTO, e, validationErrors, errorMessageDTOList);
+            totalDataFailed++;
+        }
+        return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
     @Override
