@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ApprovalIdentifierRequest {
 
-    private String approverId;
+    private String approveId;
 
 }
