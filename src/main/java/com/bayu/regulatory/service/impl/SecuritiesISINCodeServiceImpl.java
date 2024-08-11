@@ -165,7 +165,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
             log.info("Update Approve: {}", securitiesISINCodeDTO);
 
             SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(Long.valueOf(dataChange.getEntityId()))
-                    .orElseThrow(() -> new DataNotFoundException("Securities ISIN Code not fount with id: " + dataChange.getEntityId()));
+                    .orElseThrow(() -> new DataNotFoundException("Securities ISIN Code not found with id: " + dataChange.getEntityId()));
 
             // do update
             LocalDateTime approveDate = LocalDateTime.now();
@@ -212,7 +212,35 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
 
     @Override
     public SecuritiesISINCodeResponse deleteById(DeleteSecuritiesISINCodeRequest deleteSecuritiesISINCodeRequest, RegulatoryDataChangeDTO regulatoryDataChangeDTO) {
-        return null;
+        log.info("Start delete Securities ISIN Code by id: {}, {}", deleteSecuritiesISINCodeRequest, regulatoryDataChangeDTO);
+        regulatoryDataChangeDTO.setInputId(deleteSecuritiesISINCodeRequest.getInputId());
+        int totalDataSuccess = 0;
+        int totalDataFailed = 0;
+        List<ErrorMessageDTO> errorMessageDTOList = new ArrayList<>();
+        List<String> validationErrors = new ArrayList<>();
+        SecuritiesISINCodeDTO securitiesISINCodeDTO = null;
+
+        try {
+            SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(deleteSecuritiesISINCodeRequest.getId())
+                    .orElseThrow(() -> new DataNotFoundException("Securities ISIN Code not found with id: " + deleteSecuritiesISINCodeRequest.getInputId()));
+
+            securitiesISINCodeDTO = securitiesISINCodeMapper.toDTO(securitiesISINCode);
+
+            regulatoryDataChangeDTO.setEntityId(securitiesISINCode.getId().toString());
+            regulatoryDataChangeDTO.setJsonDataBefore(
+                    JsonUtil.cleanedEntityDataFromApprovalData(
+                            objectMapper.writeValueAsString(securitiesISINCode)
+                    )
+            );
+            regulatoryDataChangeDTO.setJsonDataAfter("");
+            RegulatoryDataChange regulatoryDataChange = dataChangeMapper.toModel(regulatoryDataChangeDTO);
+            regulatoryDataChangeService.createChangeActionDelete(regulatoryDataChange, SecuritiesISINCode.class);
+            totalDataSuccess++;
+        } catch (Exception e) {
+            handleGeneralError(securitiesISINCodeDTO, e, validationErrors, errorMessageDTOList);
+            totalDataFailed++;
+        }
+        return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
     }
 
     @Override
