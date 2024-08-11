@@ -3,6 +3,7 @@ package com.bayu.regulatory.service.impl;
 import com.bayu.regulatory.dto.RegulatoryDataChangeDTO;
 import com.bayu.regulatory.exception.DataNotFoundException;
 import com.bayu.regulatory.exception.ParseValueException;
+import com.bayu.regulatory.mapper.RegulatoryDataChangeMapper;
 import com.bayu.regulatory.model.RegulatoryDataChange;
 import com.bayu.regulatory.model.enumerator.ApprovalStatus;
 import com.bayu.regulatory.repository.RegulatoryDataChangeRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.bayu.regulatory.model.enumerator.ApprovalStatus.*;
 import static com.bayu.regulatory.model.enumerator.ChangeAction.*;
@@ -28,6 +30,7 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     private static final String ERROR_MESSAGE_NOT_FOUND_ID = "Data Change not found with id: ";
 
     private final RegulatoryDataChangeRepository regulatoryDataChangeRepository;
+    private final RegulatoryDataChangeMapper regulatoryDataChangeMapper;
 
     @Override
     public RegulatoryDataChange getById(Long id) {
@@ -37,9 +40,12 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     }
 
     @Override
-    public List<RegulatoryDataChange> getAll() {
+    public List<RegulatoryDataChangeDTO> getAll() {
         log.info("Start get all regulatory data change");
-        return regulatoryDataChangeRepository.findAll();
+        List<RegulatoryDataChange> collect = regulatoryDataChangeRepository.findAll().stream()
+                .sorted((e1, e2) -> e2.getId().compareTo(e1.getId()))  // Descending order by id
+                .toList();
+        return regulatoryDataChangeMapper.toDTOList(collect);
     }
 
     @Override
@@ -110,6 +116,11 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
 
     @Override
     public <T> void createChangeActionAdd(RegulatoryDataChange dataChange, Class<T> clazz) {
+        // Property of Approval
+        dataChange.setApprovalStatus(PENDING);
+        dataChange.setInputDate(LocalDateTime.now());
+
+        // Property of Data Change
         dataChange.setAction(ADD);
         dataChange.setEntityId("");
         dataChange.setEntityClassName(clazz.getName());
@@ -124,6 +135,11 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     @Override
     public <T> void createChangeActionEdit(RegulatoryDataChange dataChange, Class<T> clazz) {
         log.info("Start create change action Edit: {}", dataChange);
+        // Properties of Approval
+        dataChange.setApprovalStatus(PENDING);
+        dataChange.setInputDate(LocalDateTime.now());
+
+        // Properties of Data Change
         dataChange.setAction(EDIT);
         dataChange.setEntityClassName(clazz.getName());
         dataChange.setTableName(TableNameResolver.getTableName(clazz));
@@ -136,6 +152,11 @@ public class RegulatoryDataChangeServiceImpl implements RegulatoryDataChangeServ
     @Override
     public <T> void createChangeActionDelete(RegulatoryDataChange dataChange, Class<T> clazz) {
         log.info("Start create change action Delete: {}", dataChange);
+        // Properties of Approval
+        dataChange.setApprovalStatus(PENDING);
+        dataChange.setInputDate(LocalDateTime.now());
+
+        // Properties of Data Change
         dataChange.setAction(DELETE);
         dataChange.setEntityClassName(clazz.getName());
         dataChange.setTableName(TableNameResolver.getTableName(clazz));
