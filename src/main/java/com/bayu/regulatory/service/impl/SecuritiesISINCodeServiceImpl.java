@@ -61,33 +61,24 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         int totalDataFailed = 0;
         List<ErrorMessageDTO> errorMessageDTOList = new ArrayList<>();
 
-        for (UploadSecuritiesISINCodeDataRequest isinCodeDataRequest : uploadSecuritiesIssuerCodeListRequest.getUploadSecuritiesISINCodeDataRequestList()) {
+        for (UploadSecuritiesISINCodeDataRequest securitiesISINCodeDataRequest : uploadSecuritiesIssuerCodeListRequest.getUploadSecuritiesISINCodeDataRequestList()) {
             List<String> validationErrors = new ArrayList<>();
             SecuritiesISINCodeDTO securitiesISINCodeDTO = null;
 
             try {
-                Set<ConstraintViolation<Object>> violations;
+                Result result = getViolationResult(securitiesISINCodeDataRequest);
 
-                // Cek apakah data sudah ada untuk update
-                Optional<SecuritiesISINCode> existingISINCode = securitiesISINCodeRepository.findByExternalCode(isinCodeDataRequest.getExternalCode2());
-                if (existingISINCode.isPresent()) {
-                    violations = validationData.validateObject(isinCodeDataRequest, UpdateValidationGroup.class);
-                } else {
-                    violations = validationData.validateObject(isinCodeDataRequest, AddValidationGroup.class);
-                }
-
-                // Proses validasi
-                if (!violations.isEmpty()) {
-                    for (ConstraintViolation<Object> violation : violations) {
-                        validationErrors.add(violation.getMessage());
-                    }
-                    errorMessageDTOList.add(new ErrorMessageDTO(isinCodeDataRequest.getExternalCode2(), validationErrors));
+                if (!result.violations().isEmpty()) {
+                    createErrorViolation(securitiesISINCodeDataRequest, result, validationErrors, errorMessageDTOList);
                     totalDataFailed++;
                 } else {
-                    securitiesISINCodeDTO = securitiesISINCodeMapper.fromUploadRequestToDTO(isinCodeDataRequest);
-                    if (existingISINCode.isPresent()) {
-                        handleExistingISINCode(existingISINCode.get(), securitiesISINCodeDTO, regulatoryDataChangeDTO);
+                    securitiesISINCodeDTO = securitiesISINCodeMapper.fromUploadRequestToDTO(securitiesISINCodeDataRequest);
+
+                    if (result.existingISINCode().isPresent()) {
+                        log.info("EDIT: {}", securitiesISINCodeDTO);
+                        handleExistingISINCode(result.existingISINCode().get(), securitiesISINCodeDTO, regulatoryDataChangeDTO);
                     } else {
+                        log.info("ADD: {}", securitiesISINCodeDTO);
                         handleNewISINCode(securitiesISINCodeDTO, regulatoryDataChangeDTO);
                     }
                     totalDataSuccess++;
@@ -99,6 +90,30 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         }
 
         return new SecuritiesISINCodeResponse(totalDataSuccess, totalDataFailed, errorMessageDTOList);
+    }
+
+    private static void createErrorViolation(UploadSecuritiesISINCodeDataRequest securitiesISINCodeDataRequest, Result result, List<String> validationErrors, List<ErrorMessageDTO> errorMessageDTOList) {
+        for (ConstraintViolation<Object> violation : result.violations()) {
+            validationErrors.add(violation.getMessage());
+        }
+        errorMessageDTOList.add(new ErrorMessageDTO(securitiesISINCodeDataRequest.getExternalCode2(), validationErrors));
+    }
+
+    private Result getViolationResult(UploadSecuritiesISINCodeDataRequest securitiesISINCodeDataRequest) {
+        trimRequestData(securitiesISINCodeDataRequest);
+        Set<ConstraintViolation<Object>> violations;
+        Optional<SecuritiesISINCode> existingISINCode = securitiesISINCodeRepository.findByExternalCode(securitiesISINCodeDataRequest.getExternalCode2());
+        if (existingISINCode.isPresent()) {
+            SecuritiesISINCode securitiesISINCode = existingISINCode.get();
+            populateSecuritiesISINCodeDataRequest(securitiesISINCodeDataRequest, securitiesISINCode);
+            violations = validationData.validateObject(securitiesISINCodeDataRequest, UpdateValidationGroup.class);
+        } else {
+            violations = validationData.validateObject(securitiesISINCodeDataRequest, AddValidationGroup.class);
+        }
+        return new Result(violations, existingISINCode);
+    }
+
+    private record Result(Set<ConstraintViolation<Object>> violations, Optional<SecuritiesISINCode> existingISINCode) {
     }
 
     @Transactional
@@ -141,6 +156,7 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
                 SecuritiesISINCode save = securitiesISINCodeRepository.save(securitiesISINCode);
 
                 dataChange.setApproveId(approveId);
+                dataChange.setApproveDate(approveDate);
                 dataChange.setApproveIPAddress(approveIPAddress);
                 dataChange.setEntityId(save.getId().toString());
                 dataChange.setJsonDataAfter(
@@ -173,12 +189,10 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
             RegulatoryDataChange dataChange = regulatoryDataChangeService.getById(approveSecuritiesISINCodeRequest.getDataChangeId());
 
             securitiesISINCodeDTO = objectMapper.readValue(dataChange.getJsonDataAfter(), SecuritiesISINCodeDTO.class);
-            log.info("Update Approve: {}", securitiesISINCodeDTO);
 
             SecuritiesISINCode securitiesISINCode = securitiesISINCodeRepository.findById(Long.valueOf(dataChange.getEntityId()))
                     .orElseThrow(() -> new DataNotFoundException(ID_NOT_FOUND + dataChange.getEntityId()));
 
-            // do update
             LocalDateTime approveDate = LocalDateTime.now();
 
             if (!securitiesISINCodeDTO.getCurrency().isEmpty()) {
@@ -307,7 +321,6 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
     }
 
     private void handleGeneralError(SecuritiesISINCodeDTO dto, Exception e, List<String> validationErrors, List<ErrorMessageDTO> errorMessageDTOList) {
-        log.error("An unexpected error occurred: {}", e.getMessage(), e);
         validationErrors.add(e.getMessage());
         errorMessageDTOList.add(
                 new ErrorMessageDTO(dto != null && !dto.getExternalCode().isEmpty() ? dto.getExternalCode() : UNKNOWN_EXTERNAL_CODE, validationErrors)
@@ -323,7 +336,6 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
     private void handleNewISINCode(SecuritiesISINCodeDTO securitiesISINCodeDTO, RegulatoryDataChangeDTO regulatoryDataChangeDTO) throws JsonProcessingException {
         regulatoryDataChangeDTO.setJsonDataAfter(objectMapper.writeValueAsString(securitiesISINCodeDTO));
         RegulatoryDataChange regulatoryDataChange = dataChangeMapper.toModel(regulatoryDataChangeDTO);
-        log.info("Regulatory Data Change add: {}", regulatoryDataChange);
         regulatoryDataChangeService.createChangeActionAdd(regulatoryDataChange, SecuritiesISINCode.class);
     }
 
@@ -340,13 +352,38 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
                 .isinLBABK(!securitiesISINCodeDTO.getIsinLBABK().isEmpty() ? securitiesISINCodeDTO.getIsinLBABK() : securitiesISINCodeEntity.getIsinLBABK())
                 .build();
 
-        log.info("Temp: {}", temp);
-
         regulatoryDataChangeDTO.setJsonDataAfter(JsonUtil.cleanedId(objectMapper.writeValueAsString(temp)));
+        log.info("Json data after: {}", regulatoryDataChangeDTO.getJsonDataAfter());
 
         RegulatoryDataChange regulatoryDataChange = dataChangeMapper.toModel(regulatoryDataChangeDTO);
-        log.info("Regulatory data change edit: {}", regulatoryDataChange);
         regulatoryDataChangeService.createChangeActionEdit(regulatoryDataChange, SecuritiesISINCode.class);
+    }
+
+    private void trimRequestData(UploadSecuritiesISINCodeDataRequest request) {
+        if (request.getExternalCode2() != null) {
+            request.setExternalCode2(request.getExternalCode2().trim());
+        }
+        if (request.getCurrency() != null) {
+            request.setCurrency(request.getCurrency().trim());
+        }
+        if (request.getIsinLKPBU() != null) {
+            request.setIsinLKPBU(request.getIsinLKPBU().trim());
+        }
+        if (request.getIsinLBABK() != null) {
+            request.setIsinLBABK(request.getIsinLBABK().trim());
+        }
+    }
+
+    private void populateSecuritiesISINCodeDataRequest(UploadSecuritiesISINCodeDataRequest securitiesISINCodeDataRequest, SecuritiesISINCode securitiesISINCode) {
+        if (securitiesISINCodeDataRequest.getCurrency() == null || securitiesISINCodeDataRequest.getCurrency().isEmpty()) {
+            securitiesISINCodeDataRequest.setCurrency(securitiesISINCode.getCurrency());
+        }
+        if (securitiesISINCodeDataRequest.getIsinLKPBU() == null || securitiesISINCodeDataRequest.getIsinLKPBU().isEmpty()) {
+            securitiesISINCodeDataRequest.setIsinLKPBU(securitiesISINCode.getIsinLKPBU());
+        }
+        if (securitiesISINCodeDataRequest.getIsinLBABK() == null || securitiesISINCodeDataRequest.getIsinLBABK().isEmpty()) {
+            securitiesISINCodeDataRequest.setIsinLBABK(securitiesISINCode.getIsinLBABK());
+        }
     }
 
 }
