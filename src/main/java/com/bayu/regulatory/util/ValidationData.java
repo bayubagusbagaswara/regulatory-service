@@ -1,21 +1,23 @@
 package com.bayu.regulatory.util;
 
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
+
+import java.util.Set;
 
 @Component
-@RequiredArgsConstructor
 public class ValidationData {
+
 
     private final Validator validator;
 
-    public Errors validateObject(Object target) {
-        Errors errors = new BeanPropertyBindingResult(target, target.getClass().getSimpleName());
-        validator.validate(target, errors);
-        return errors;
+    public ValidationData(Validator validator) {
+        this.validator = validator;
+    }
+
+    public <T> Set<ConstraintViolation<T>> validateObject(T target, Class<?>... groups) {
+        return validator.validate(target, groups);
     }
 
 }
