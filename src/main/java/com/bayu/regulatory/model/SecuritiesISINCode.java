@@ -7,7 +7,7 @@ import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "regulatory_securities_isin_code")
+@Table(name = "reg_isin_code")
 @Data
 @SuperBuilder
 @NoArgsConstructor
