@@ -13,14 +13,8 @@ import java.util.List;
 public interface RegulatoryDataChangeRepository extends JpaRepository<RegulatoryDataChange, Long> {
 
     @Query(value = "SELECT CASE WHEN COUNT(*) = :listSize THEN 1 ELSE 0 END " +
-            "FROM regulatory_data_change WHERE id IN :idList", nativeQuery = true)
+            "FROM reg_data_change WHERE id IN :idList", nativeQuery = true)
     Boolean existsByIdList(@Param("idList") List<Long> idList, @Param("listSize") Integer listSize);
-
-//    @Query(value = "SELECT CASE WHEN COUNT(*) = :listSize THEN true ELSE false END " +
-//            "FROM RegulatoryDataChange WHERE id IN = :idList AND approvalStatus = :status")
-//    Boolean existsByIdListAndStatus(@Param("idList") List<Long> idList,
-//                                    @Param("listSize") Long listSize,
-//                                    @Param("status") ApprovalStatus status);
 
     List<RegulatoryDataChange> findByIdIn(List<Long> idList);
 
@@ -28,7 +22,7 @@ public interface RegulatoryDataChangeRepository extends JpaRepository<Regulatory
 
     List<RegulatoryDataChange> findAllByApprovalStatus(String approvalStatus);
 
-    @Query(value = "SELECT DISTINCT menu FROM regulatory_data_change WHERE ISNULL(menu, '') != '' ORDER BY menu ASC", nativeQuery = true)
+    @Query(value = "SELECT DISTINCT menu FROM reg_data_change WHERE ISNULL(menu, '') != '' ORDER BY menu ASC", nativeQuery = true)
     List<String> findAllMenu();
 
 }
