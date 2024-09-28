@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "regulatory_data_change")
+@Table(name = "reg_data_change")
 @Data
 @SuperBuilder
 @NoArgsConstructor
