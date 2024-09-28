@@ -48,8 +48,8 @@ public interface ExchangeRateMapper {
     ExchangeRate toModel(ExchangeRateDTO exchangeRateDTO);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(source = "currencyCode", target = "currencyCode", qualifiedByName = "nullToEmpty")
-    @Mapping(source = "currencyName", target = "currencyName", qualifiedByName = "nullToEmpty")
+    @Mapping(source = "code", target = "currencyCode", qualifiedByName = "nullToEmpty")
+    @Mapping(source = "name", target = "currencyName", qualifiedByName = "nullToEmpty")
     @Mapping(source = "rate", target = "rate", qualifiedByName = "nullToEmpty")
     ExchangeRateDTO fromUpdateRequestToDTO(UpdateExchangeRateRequest updateExchangeRateRequest);
 
