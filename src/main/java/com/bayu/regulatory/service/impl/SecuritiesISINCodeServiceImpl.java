@@ -3,6 +3,8 @@ package com.bayu.regulatory.service.impl;
 import com.bayu.regulatory.dto.ErrorMessageDTO;
 import com.bayu.regulatory.dto.RegulatoryDataChangeDTO;
 import com.bayu.regulatory.dto.securitiesisincode.*;
+import com.bayu.regulatory.dto.validation.AddValidationGroup;
+import com.bayu.regulatory.dto.validation.UpdateValidationGroup;
 import com.bayu.regulatory.exception.DataNotFoundException;
 import com.bayu.regulatory.mapper.RegulatoryDataChangeMapper;
 import com.bayu.regulatory.mapper.SecuritiesISINCodeMapper;
@@ -15,16 +17,17 @@ import com.bayu.regulatory.util.JsonUtil;
 import com.bayu.regulatory.util.ValidationData;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.ConstraintViolation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.Errors;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.bayu.regulatory.model.enumerator.ApprovalStatus.APPROVED;
 
@@ -61,25 +64,29 @@ public class SecuritiesISINCodeServiceImpl implements SecuritiesISINCodeService 
         for (UploadSecuritiesISINCodeDataRequest isinCodeDataRequest : uploadSecuritiesIssuerCodeListRequest.getUploadSecuritiesISINCodeDataRequestList()) {
             List<String> validationErrors = new ArrayList<>();
             SecuritiesISINCodeDTO securitiesISINCodeDTO = null;
+
             try {
-                Errors errors = validationData.validateObject(isinCodeDataRequest);
-                if (errors.hasErrors()) {
-                    errors.getAllErrors().forEach(error -> validationErrors.add(error.getDefaultMessage()));
+                Set<ConstraintViolation<Object>> violations;
+
+                // Cek apakah data sudah ada untuk update
+                Optional<SecuritiesISINCode> existingISINCode = securitiesISINCodeRepository.findByExternalCode(isinCodeDataRequest.getExternalCode2());
+                if (existingISINCode.isPresent()) {
+                    violations = validationData.validateObject(isinCodeDataRequest, UpdateValidationGroup.class);
+                } else {
+                    violations = validationData.validateObject(isinCodeDataRequest, AddValidationGroup.class);
                 }
 
-                securitiesISINCodeDTO = securitiesISINCodeMapper.fromUploadRequestToDTO(isinCodeDataRequest);
-
-                if (!validationErrors.isEmpty()) {
-                    ErrorMessageDTO errorMessageDTO = new ErrorMessageDTO(
-                            !securitiesISINCodeDTO.getExternalCode().isEmpty() ? securitiesISINCodeDTO.getExternalCode() : UNKNOWN_EXTERNAL_CODE,
-                            validationErrors);
-                    errorMessageDTOList.add(errorMessageDTO);
+                // Proses validasi
+                if (!violations.isEmpty()) {
+                    for (ConstraintViolation<Object> violation : violations) {
+                        validationErrors.add(violation.getMessage());
+                    }
+                    errorMessageDTOList.add(new ErrorMessageDTO(isinCodeDataRequest.getExternalCode2(), validationErrors));
                     totalDataFailed++;
                 } else {
-                    Optional<SecuritiesISINCode> securitiesISINCode = securitiesISINCodeRepository.findByExternalCode(isinCodeDataRequest.getExternalCode2());
-
-                    if (securitiesISINCode.isPresent()) {
-                        handleExistingISINCode(securitiesISINCode.get(), securitiesISINCodeDTO, regulatoryDataChangeDTO);
+                    securitiesISINCodeDTO = securitiesISINCodeMapper.fromUploadRequestToDTO(isinCodeDataRequest);
+                    if (existingISINCode.isPresent()) {
+                        handleExistingISINCode(existingISINCode.get(), securitiesISINCodeDTO, regulatoryDataChangeDTO);
                     } else {
                         handleNewISINCode(securitiesISINCodeDTO, regulatoryDataChangeDTO);
                     }
