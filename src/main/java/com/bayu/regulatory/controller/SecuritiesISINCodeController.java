@@ -15,9 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Maintenance Kode ISIN Efek
- */
 @RestController
 @RequestMapping(path = "/api/regulatory/isin-code")
 @Slf4j
