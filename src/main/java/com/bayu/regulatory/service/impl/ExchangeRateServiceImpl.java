@@ -57,10 +57,10 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         ExchangeRateDTO exchangeRateDTO = null;
 
         try {
-            Errors errors = validationData.validateObject(createExchangeRateRequest);
-            if (errors.hasErrors()) {
-                errors.getAllErrors().forEach(error -> validationErrors.add(error.getDefaultMessage()));
-            }
+//            Errors errors = validationData.validateObject(createExchangeRateRequest);
+//            if (errors.hasErrors()) {
+//                errors.getAllErrors().forEach(error -> validationErrors.add(error.getDefaultMessage()));
+//            }
 
             exchangeRateDTO = exchangeRateMapper.fromCreateRequestToDTO(createExchangeRateRequest);
 
@@ -148,10 +148,10 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         ExchangeRateDTO exchangeRateDTO = null;
 
         try {
-            Errors errors = validationData.validateObject(updateExchangeRateRequest);
-            if (errors.hasErrors()) {
-                errors.getAllErrors().forEach(error -> validationErrors.add(error.getDefaultMessage()));
-            }
+//            Errors errors = validationData.validateObject(updateExchangeRateRequest);
+//            if (errors.hasErrors()) {
+//                errors.getAllErrors().forEach(error -> validationErrors.add(error.getDefaultMessage()));
+//            }
 
             exchangeRateDTO = exchangeRateMapper.fromUpdateRequestToDTO(updateExchangeRateRequest);
 
